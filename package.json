@@ -16,6 +16,7 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
+    "@material-ui/data-grid": "^4.0.0-alpha.31",
     "@types/react": "^17.0.4",
     "@typescript-eslint/eslint-plugin": "^4.22.1",
     "@typescript-eslint/parser": "^4.22.1",
