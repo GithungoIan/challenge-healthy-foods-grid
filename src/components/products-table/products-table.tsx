@@ -9,7 +9,7 @@ import TableHead from '@material-ui/core/TableHead'
 import TablePagination from '@material-ui/core/TablePagination'
 import TableRow from '@material-ui/core/TableRow'
 import { Button, IconButton, lighten, Theme, Toolbar, Tooltip, Typography } from '@material-ui/core'
-import clsx from 'clsx'
+
 import ClearAllIcon from '@material-ui/icons/ClearAll'
 
 interface SelectedTableProps {
@@ -22,7 +22,17 @@ const comparedProducts = makeStyles((theme: Theme) =>
     root: {
       width: '100%'
     },
-    highlight: {}
+    highlight:
+      theme.palette.type === 'light'
+        ? {
+            color: theme.palette.secondary.main,
+            backgroundColor: lighten(theme.palette.secondary.light, 0.55)
+          }
+        : {
+            color: theme.palette.text.primary,
+            backgroundColor: theme.palette.secondary.dark
+          },
+    absolute: {}
   })
 )
 
@@ -34,13 +44,19 @@ function SelectedProducts(props: SelectedTableProps) {
   const { productsProperties, products } = props
   const classes = comparedProducts()
   return (
-    <TableHead>
+    <TableHead className={classes.root}>
       {products.map((product, productIdx) => {
         return (
           <TableRow key={productIdx}>
             {productsProperties.map((productProperty, productPropertyIdx) => (
               <TableCell key={`trc${productPropertyIdx}`} align="center">
-                {product[productProperty.name]}
+                {productIdx > 0 ? (
+                  <Typography color="primary">
+                    {product[productProperty.name] === undefined ? '-' : product[productProperty.name]}
+                  </Typography>
+                ) : (
+                  <Typography color="secondary">{product[productProperty.name]}</Typography>
+                )}
               </TableCell>
             ))}
           </TableRow>
@@ -81,9 +97,8 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
     },
     roots: {
       ...theme.typography.button,
-      backgroundColor: theme.palette.background.paper,
       padding: theme.spacing(1),
-      margin: theme.spacing(1)
+      width: 400
     },
     highlight:
       theme.palette.type === 'light'
@@ -120,28 +135,28 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           {numSelected} selected
         </Typography>
       ) : (
-        <Tooltip title="Clear list">
+        <Typography>
           <IconButton disabled aria-label="clear list">
             <ClearAllIcon />
           </IconButton>
-        </Tooltip>
+        </Typography>
       )}
       {numSelected > 1 && numSelected < 3 ? (
-        <Tooltip title="Compare Products" placement="top-end">
+        <Typography className={classes.roots}>
           <Button variant="contained">Compare products</Button>
-        </Tooltip>
+        </Typography>
       ) : numSelected < 2 ? (
-        <Tooltip title="Select 2 Products" placement="right-start">
+        <Typography className={classes.roots}>
           <Button disabled variant="contained">
             select 2 products to compare
           </Button>
-        </Tooltip>
+        </Typography>
       ) : (
-        <Tooltip title="Select 2 Products" placement="right-start">
+        <Typography className={classes.roots}>
           <Button disabled variant="contained">
             select 2 products to compare
           </Button>
-        </Tooltip>
+        </Typography>
       )}
     </Toolbar>
   )
@@ -245,7 +260,7 @@ export default function ProductsTable({ productProperties, products }) {
                     >
                       {productProperties.map((productProperty, productPropertyIdx) => (
                         <TableCell key={`trc${productPropertyIdx}`} align="center">
-                          {product[productProperty.name] === ' ' ? '-' : product[productProperty.name]}
+                          {product[productProperty.name] === undefined ? '-' : product[productProperty.name]}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -268,5 +283,4 @@ export default function ProductsTable({ productProperties, products }) {
   )
 
   // TODO Feature 2: Compare two data
-  return <div>TODO</div>
 }
