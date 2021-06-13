@@ -12,6 +12,44 @@ import { Button, IconButton, lighten, Theme, Toolbar, Tooltip, Typography } from
 import clsx from 'clsx'
 import ClearAllIcon from '@material-ui/icons/ClearAll'
 
+interface SelectedTableProps {
+  productsProperties: any
+  products: any
+}
+
+const comparedProducts = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      width: '100%'
+    },
+    highlight: {}
+  })
+)
+
+// TODO if selected[0] highlight red else if selected[1] highlight blue
+// TODO display in a single row both products currently working with two rows refactor code to fit one row
+// TODO fix toolbar alignment padding : spacing (2), (1)
+
+function SelectedProducts(props: SelectedTableProps) {
+  const { productsProperties, products } = props
+  const classes = comparedProducts()
+  return (
+    <TableHead>
+      {products.map((product, productIdx) => {
+        return (
+          <TableRow key={productIdx}>
+            {productsProperties.map((productProperty, productPropertyIdx) => (
+              <TableCell key={`trc${productPropertyIdx}`} align="center">
+                {product[productProperty.name]}
+              </TableCell>
+            ))}
+          </TableRow>
+        )
+      })}
+    </TableHead>
+  )
+}
+
 interface EnhancedTableProps {
   classes: ReturnType<typeof useStyles>
   numSelected: number
@@ -71,30 +109,39 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles()
   const { numSelected } = props
   return (
-    <Toolbar
-      className={clsx(classes.root, {
-        [classes.highlight]: numSelected > 0
-      })}
-    >
+    <Toolbar className={classes.root}>
       {numSelected > 0 ? (
         <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
+          <Tooltip title="Clear list">
+            <IconButton aria-label="clear list">
+              <ClearAllIcon />
+            </IconButton>
+          </Tooltip>
           {numSelected} selected
         </Typography>
       ) : (
         <Tooltip title="Clear list">
-          <IconButton aria-label="clear list">
+          <IconButton disabled aria-label="clear list">
             <ClearAllIcon />
           </IconButton>
         </Tooltip>
       )}
       {numSelected > 1 && numSelected < 3 ? (
-        <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
+        <Tooltip title="Compare Products" placement="top-end">
           <Button variant="contained">Compare products</Button>
-        </Typography>
+        </Tooltip>
+      ) : numSelected < 2 ? (
+        <Tooltip title="Select 2 Products" placement="right-start">
+          <Button disabled variant="contained">
+            select 2 products to compare
+          </Button>
+        </Tooltip>
       ) : (
-        <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
-          <Button variant="contained">select 2 products to compare</Button>
-        </Typography>
+        <Tooltip title="Select 2 Products" placement="right-start">
+          <Button disabled variant="contained">
+            select 2 products to compare
+          </Button>
+        </Tooltip>
       )}
     </Toolbar>
   )
@@ -176,15 +223,20 @@ export default function ProductsTable({ productProperties, products }) {
               rowCount={products.length}
               properties={productProperties}
             />
+            {selected.length > 1 && selected.length < 3 ? (
+              <SelectedProducts productsProperties={productProperties} products={selected} />
+            ) : (
+              []
+            )}
             <TableBody>
               {products
                 .slice(page * productsPerPage, page * productsPerPage + productsPerPage)
                 .map((product, productIdx) => {
-                  const isItemSelected = isSelected(product.id)
+                  const isItemSelected = isSelected(product)
                   return (
                     <TableRow
                       hover
-                      onClick={(event) => handleClick(event, product.id)}
+                      onClick={(event) => handleClick(event, product)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
