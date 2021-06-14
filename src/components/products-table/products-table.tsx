@@ -123,6 +123,14 @@ interface EnhancedTableToolbarProps {
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles()
   const { numSelected } = props
+
+  // clear the selected items
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const clearSelectedItems = () => {}
+  // compare the selected products
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const compareProducts = () => {}
+
   return (
     <Toolbar className={classes.root}>
       {numSelected > 0 ? (
@@ -132,7 +140,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
               <ClearAllIcon />
             </IconButton>
           </Tooltip>
-          {numSelected} selected
+          {numSelected} products selected
         </Typography>
       ) : (
         <Typography>
