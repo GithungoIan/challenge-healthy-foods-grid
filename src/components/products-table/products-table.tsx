@@ -8,62 +8,42 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TablePagination from '@material-ui/core/TablePagination'
 import TableRow from '@material-ui/core/TableRow'
-import { Button, IconButton, lighten, Theme, Toolbar, Tooltip, Typography } from '@material-ui/core'
+import Toolbar from '@material-ui/core/Toolbar'
+import Chip from '@material-ui/core/Chip'
+import { Button, IconButton, lighten, Theme, Box, Typography } from '@material-ui/core'
 
 import ClearAllIcon from '@material-ui/icons/ClearAll'
 
-interface SelectedTableProps {
-  productsProperties: any
+interface CompareProductsProps {
   products: any
+  productsProperties: any
 }
 
-const comparedProducts = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      width: '100%'
-    },
-    highlight:
-      theme.palette.type === 'light'
-        ? {
-            color: theme.palette.secondary.main,
-            backgroundColor: lighten(theme.palette.secondary.light, 0.55)
-          }
-        : {
-            color: theme.palette.text.primary,
-            backgroundColor: theme.palette.secondary.dark
-          },
-    absolute: {}
-  })
-)
-
-// TODO if selected[0] highlight red else if selected[1] highlight blue
-// TODO display in a single row both products currently working with two rows refactor code to fit one row
-// TODO fix toolbar alignment padding : spacing (2), (1)
-
-function SelectedProducts(props: SelectedTableProps) {
-  const { productsProperties, products } = props
-  const classes = comparedProducts()
-  return (
-    <TableHead className={classes.root}>
-      {products.map((product, productIdx) => {
+function CompareProducts(props: CompareProductsProps) {
+  const { products, productsProperties } = props
+  return products.length > 1 && products.length < 3
+    ? products.map((product, productIdx) => {
         return (
-          <TableRow key={productIdx}>
+          <TableRow key={`tr${productIdx}`}>
             {productsProperties.map((productProperty, productPropertyIdx) => (
-              <TableCell key={`trc${productPropertyIdx}`} align="center">
+              <TableCell key={`trc${productPropertyIdx}`} align="center" role="checkbox" tabIndex={-1}>
                 {productIdx > 0 ? (
-                  <Typography color="primary">
-                    {product[productProperty.name] === undefined ? '-' : product[productProperty.name]}
-                  </Typography>
+                  product[productProperty.name] === undefined ? (
+                    '-'
+                  ) : (
+                    <Chip color="primary" size="small" label={`${product[productProperty.name]}`} />
+                  )
+                ) : product[productProperty.name] === undefined ? (
+                  '-'
                 ) : (
-                  <Typography color="secondary">{product[productProperty.name]}</Typography>
+                  <Chip color="secondary" size="small" label={`${product[productProperty.name]}`} />
                 )}
               </TableCell>
             ))}
           </TableRow>
         )
-      })}
-    </TableHead>
-  )
+      })
+    : []
 }
 
 interface EnhancedTableProps {
@@ -71,11 +51,12 @@ interface EnhancedTableProps {
   numSelected: number
   rowCount: number
   properties: any
+  compared: any
+  selected: any
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { properties } = props
-
+  const { properties, compared, selected } = props
   return (
     <TableHead>
       <TableRow>
@@ -85,6 +66,11 @@ function EnhancedTableHead(props: EnhancedTableProps) {
           </TableCell>
         ))}
       </TableRow>
+      {compared.length < selected.length ? (
+        <CompareProducts products={compared} productsProperties={properties} />
+      ) : (
+        <CompareProducts products={selected} productsProperties={properties} />
+      )}
     </TableHead>
   )
 }
@@ -92,13 +78,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 const useToolbarStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      paddingLeft: theme.spacing(2),
-      paddingRight: theme.spacing(1)
-    },
-    roots: {
-      ...theme.typography.button,
-      padding: theme.spacing(1),
-      width: 400
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3)
     },
     highlight:
       theme.palette.type === 'light'
@@ -112,59 +93,73 @@ const useToolbarStyles = makeStyles((theme: Theme) =>
           },
     title: {
       flex: '1 1 100%'
+    },
+    left: {
+      display: 'flex',
+      'flex-grow': '1 ',
+      'justify-content': 'flex-end'
     }
   })
 )
 
 interface EnhancedTableToolbarProps {
   numSelected: number
+  selected: any
+  setSelected: any
+  setCompared: any
+  compared: any
+  product: any
 }
 
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles()
-  const { numSelected } = props
+  // eslint-disable-next-line prefer-const
+  const { numSelected, setSelected, selected, setCompared } = props
+  const handleClear = () => {
+    const newSelected: string[] = []
+    setSelected(newSelected)
+    setCompared(newSelected)
+  }
 
-  // clear the selected items
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const clearSelectedItems = () => {}
-  // compare the selected products
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const compareProducts = () => {}
+  // setCompared(newSelected)
+  const showSelected = () => {
+    setCompared(selected)
+  }
+  // setCompared(selected)
 
   return (
     <Toolbar className={classes.root}>
       {numSelected > 0 ? (
-        <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
-          <Tooltip title="Clear list">
-            <IconButton aria-label="clear list">
-              <ClearAllIcon />
-            </IconButton>
-          </Tooltip>
-          {numSelected} products selected
-        </Typography>
-      ) : (
-        <Typography>
-          <IconButton disabled aria-label="clear list">
+        <Box>
+          <IconButton onClick={() => handleClear()}>
             <ClearAllIcon />
           </IconButton>
-        </Typography>
-      )}
-      {numSelected > 1 && numSelected < 3 ? (
-        <Typography className={classes.roots}>
-          <Button variant="contained">Compare products</Button>
-        </Typography>
-      ) : numSelected < 2 ? (
-        <Typography className={classes.roots}>
-          <Button disabled variant="contained">
-            select 2 products to compare
-          </Button>
-        </Typography>
+        </Box>
       ) : (
-        <Typography className={classes.roots}>
-          <Button disabled variant="contained">
+        <Box>
+          <IconButton>
+            <ClearAllIcon />
+          </IconButton>
+        </Box>
+      )}
+      {numSelected > 0 ? <Typography>{numSelected} products selected</Typography> : ''}
+      {numSelected > 1 && numSelected < 3 ? (
+        <Box className={classes.left}>
+          <Button
+            onClick={() => {
+              showSelected()
+            }}
+            variant="contained"
+          >
+            Compare products
+          </Button>
+        </Box>
+      ) : (
+        <Box className={classes.left}>
+          <Button disabled variant="contained" style={{ width: 400 }}>
             select 2 products to compare
           </Button>
-        </Typography>
+        </Box>
       )}
     </Toolbar>
   )
@@ -203,6 +198,7 @@ export default function ProductsTable({ productProperties, products }) {
   const classes = useStyles()
 
   const [selected, setSelected] = React.useState<string[]>([])
+  const [compared, setCompared] = React.useState<string[]>([])
   const [page, setPage] = React.useState(0)
   const [productsPerPage, setProductsPerPage] = React.useState(10)
 
@@ -237,7 +233,14 @@ export default function ProductsTable({ productProperties, products }) {
   return (
     <div className={classes.root}>
       <Paper className={classes.paper}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar
+          numSelected={selected.length}
+          selected={selected}
+          setSelected={setSelected}
+          setCompared={setCompared}
+          compared={compared}
+          product={selected}
+        />
         <TableContainer className={classes.container}>
           <Table stickyHeader aria-label="sticky table">
             <EnhancedTableHead
@@ -245,12 +248,9 @@ export default function ProductsTable({ productProperties, products }) {
               numSelected={selected.length}
               rowCount={products.length}
               properties={productProperties}
+              compared={compared}
+              selected={selected}
             />
-            {selected.length > 1 && selected.length < 3 ? (
-              <SelectedProducts productsProperties={productProperties} products={selected} />
-            ) : (
-              []
-            )}
             <TableBody>
               {products
                 .slice(page * productsPerPage, page * productsPerPage + productsPerPage)
