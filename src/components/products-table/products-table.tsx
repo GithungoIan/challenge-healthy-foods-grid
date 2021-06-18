@@ -21,29 +21,39 @@ interface CompareProductsProps {
 
 function CompareProducts(props: CompareProductsProps) {
   const { products, productsProperties } = props
-  return products.length > 1 && products.length < 3
-    ? products.map((product, productIdx) => {
+  const [firstProduct, secondProduct] = products
+  return (
+    <TableRow>
+      {productsProperties.map(({ name: productProperty }) => {
+        if (!firstProduct[productProperty] && !secondProduct[productProperty]) {
+          return <TableCell align="center" key={productProperty} />
+        }
+        if (productProperty === 'name') {
+          return (
+            <TableCell align="center" key={productProperty}>
+              {`${firstProduct.name}`} vs
+              <br />
+              {`${secondProduct.name}`}
+            </TableCell>
+          )
+        }
+        if (productProperty === 'tags') {
+          return <TableCell align="center" key={productProperty}>{`${firstProduct.tags?.join(', ') ?? '-'}`}</TableCell>
+        }
         return (
-          <TableRow key={`tr${productIdx}`}>
-            {productsProperties.map((productProperty, productPropertyIdx) => (
-              <TableCell key={`trc${productPropertyIdx}`} align="center" role="checkbox" tabIndex={-1}>
-                {productIdx > 0 ? (
-                  product[productProperty.name] === undefined ? (
-                    '-'
-                  ) : (
-                    <Chip color="primary" size="small" label={`${product[productProperty.name]}`} />
-                  )
-                ) : product[productProperty.name] === undefined ? (
-                  '-'
-                ) : (
-                  <Chip color="secondary" size="small" label={`${product[productProperty.name]}`} />
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
+          <TableCell align="center" key={productProperty}>
+            <Chip
+              size="small"
+              color="secondary"
+              label={firstProduct[productProperty] ?? '-'}
+              style={{ textDecoration: 'line-through', marginRight: '.25rem' }}
+            />
+            <Chip size="small" color="primary" label={secondProduct[productProperty] ?? '-'} />
+          </TableCell>
         )
-      })
-    : []
+      })}
+    </TableRow>
+  )
 }
 
 interface EnhancedTableProps {
@@ -66,11 +76,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
           </TableCell>
         ))}
       </TableRow>
-      {compared.length < selected.length ? (
-        <CompareProducts products={compared} productsProperties={properties} />
-      ) : (
-        <CompareProducts products={selected} productsProperties={properties} />
-      )}
+      {}
+      {compared && selected.length == 2 ? <CompareProducts products={selected} productsProperties={properties} /> : []}
     </TableHead>
   )
 }
@@ -114,16 +121,16 @@ interface EnhancedTableToolbarProps {
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const classes = useToolbarStyles()
   // eslint-disable-next-line prefer-const
-  const { numSelected, setSelected, selected, setCompared } = props
+  const { numSelected, setSelected, setCompared } = props
   const handleClear = () => {
     const newSelected: string[] = []
     setSelected(newSelected)
-    setCompared(newSelected)
+    setCompared(false)
   }
 
   // setCompared(newSelected)
   const showSelected = () => {
-    setCompared(selected)
+    setCompared(true)
   }
   // setCompared(selected)
 
@@ -198,7 +205,7 @@ export default function ProductsTable({ productProperties, products }) {
   const classes = useStyles()
 
   const [selected, setSelected] = React.useState<string[]>([])
-  const [compared, setCompared] = React.useState<string[]>([])
+  const [compared, setCompared] = React.useState(false)
   const [page, setPage] = React.useState(0)
   const [productsPerPage, setProductsPerPage] = React.useState(10)
 
